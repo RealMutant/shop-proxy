@@ -1,3 +1,6 @@
-toml name = "shop-proxy" main = "src/index.js" compatibility_date = "2023-05-18"
+name = "shop-proxy"
+main = "src/index.js"
+compatibility_date = "2023-05-18"
 
-[triggers] crons = [] 
+[triggers]
+crons = []
