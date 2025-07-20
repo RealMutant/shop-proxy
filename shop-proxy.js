@@ -6,7 +6,7 @@ async function handleRequest(request) {
   const url = new URL(request.url)
   
   // Replace with your actual server IP or domain
-  const BACKEND_HOST = 'server_ip_or_main_domain'
+  const BACKEND_HOST = '162.246.16.123'
   
   // WooCommerce API and Printful authentication paths
   const WOOCOMMERCE_API_PATHS = [
