@@ -6,7 +6,7 @@ async function handleRequest(request) {
   const url = new URL(request.url)
   
   // Use a domain name instead of IP address
-  const BACKEND_HOST = 'theaegisalliance.com' // <- USE DOMAIN, NOT IP!
+  const BACKEND_HOST = 'shop.theaegisalliance.com' // <- USE DOMAIN, NOT IP!
   
   // WooCommerce API and Printful authentication paths
   const WOOCOMMERCE_API_PATHS = [
