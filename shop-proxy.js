@@ -5,8 +5,9 @@ addEventListener('fetch', event => {
 async function handleRequest(request) {
   const url = new URL(request.url)
   
-  // Use the backend subdomain you created
-  const BACKEND_HOST = 'shop-backend.theaegisalliance.com'
+  // Use your actual server IP address
+  const BACKEND_IP = '162.246.16.123' // Replace with your actual server IP
+  const BACKEND_HOST = 'shop.theaegisalliance.com' // Your WordPress expects this host
   
   // WooCommerce API and Printful authentication paths
   const WOOCOMMERCE_API_PATHS = [
@@ -36,17 +37,17 @@ async function handleRequest(request) {
     url.pathname.includes(path) || url.search.includes('printful')
   )
   
-  // Create backend URL using your backend subdomain
+  // Create backend URL using IP address
   const backendUrl = new URL(request.url)
-  backendUrl.hostname = BACKEND_HOST
+  backendUrl.hostname = BACKEND_IP
   backendUrl.protocol = 'https:'
   
-  // Prepare headers
+  // Prepare headers - CRITICAL: Set the correct Host header
   const headers = new Headers(request.headers)
   
-  // Important: Set the correct Host header for your WordPress installation
-  headers.set('Host', 'shop.theaegisalliance.com')
-  headers.set('X-Forwarded-Host', 'shop.theaegisalliance.com')
+  // This is the key to avoiding 1003 error - tell your server which site to serve
+  headers.set('Host', BACKEND_HOST)
+  headers.set('X-Forwarded-Host', BACKEND_HOST)
   headers.set('X-Forwarded-Proto', 'https')
   headers.set('X-Real-IP', request.headers.get('CF-Connecting-IP') || '')
   headers.set('X-Forwarded-For', request.headers.get('CF-Connecting-IP') || '')
@@ -77,10 +78,11 @@ async function handleRequest(request) {
       if (authResponse.status >= 300 && authResponse.status < 400) {
         const location = authResponse.headers.get('Location')
         if (location) {
-          // Make sure redirect URLs use the correct domain
+          // Fix redirect URLs to use the public domain
           const redirectUrl = new URL(location, url)
-          if (redirectUrl.hostname === BACKEND_HOST) {
+          if (redirectUrl.hostname === BACKEND_IP || redirectUrl.hostname === BACKEND_HOST) {
             redirectUrl.hostname = 'shop.theaegisalliance.com'
+            redirectUrl.protocol = 'https:'
           }
           newResponse.headers.set('Location', redirectUrl.toString())
         }
@@ -109,14 +111,15 @@ async function handleRequest(request) {
     newResponse.headers.set('X-Frame-Options', 'SAMEORIGIN')
     newResponse.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
     
-    // Fix any hardcoded backend URLs in the response
+    // Fix any hardcoded URLs in the response
     const contentType = response.headers.get('content-type') || ''
     if (contentType.includes('text/html') || contentType.includes('application/json')) {
       const text = await response.text()
-      const modifiedText = text.replace(
-        new RegExp(BACKEND_HOST, 'g'),
-        'shop.theaegisalliance.com'
-      )
+      // Replace any occurrence of the IP with the domain
+      const modifiedText = text
+        .replace(new RegExp(`https?://${BACKEND_IP}`, 'g'), 'https://shop.theaegisalliance.com')
+        .replace(new RegExp(BACKEND_IP, 'g'), 'shop.theaegisalliance.com')
+      
       return new Response(modifiedText, {
         status: response.status,
         statusText: response.statusText,
